@@ -482,9 +482,10 @@ internal open class CancellableContinuationImpl<in T>(
             assert { onCancellation == null } // only successful results can be cancelled
             proposedUpdate
         }
-        !resumeMode.isCancellableMode && idempotent == null -> proposedUpdate // cannot be cancelled in process, all is fine
-        onCancellation != null || state is CancelHandler || idempotent != null ->
+        !resumeMode.isCancellableMode && proposedUpdate !is NotCompleted && idempotent == null -> proposedUpdate // cannot be cancelled in process, all is fine
+        proposedUpdate is NotCompleted || onCancellation != null || state is CancelHandler || idempotent != null ->
             // mark as CompletedContinuation if special cases are present:
+            // proposed update implements NotCompleted, which must not be implemented by completed state
             // Cancellation handlers that shall be called after resume or idempotent resume
             CompletedContinuation(proposedUpdate, state as? CancelHandler, onCancellation, idempotent)
         else -> proposedUpdate // simple case -- use the value directly
